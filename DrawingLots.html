@@ -16,7 +16,7 @@
     <button id="lMinus">-</button> &emsp;
     <div style="display: inline-block;" id="lotCount"> 1 </div>
     <p><div id="guide">버튼을 눌러 제비를 섞어 주세요</div></p>
-    <p><button style="position: relative;">제비 섞기</button></p>
+    <p><button id="buttonShake" style="position: relative;">제비 섞기</button></p>
 
     <script>
         const $personCount = document.querySelector('#personCount');
@@ -25,6 +25,9 @@
         const $pMinus = document.querySelector('#pMinus');
         const $lPlus = document.querySelector('#lPlus');
         const $lMinus = document.querySelector('#lMinus');
+
+        const $buttonShake = document.querySelector('#buttonShake');
+        const $guide=document.querySelector('guide');
         
         for(i=0; i<5; i++){ // 최초에 제비 이미지 5개 생성
             img = document.createElement('img');
@@ -109,6 +112,35 @@
             }
             console.log(lots);
         }
+
+        let jebiShuff = [];
+
+        function jebiMix(lots) {
+            let lotsNewArray = lots.slice(); // lots 배열을 복사후 새롭게 배열 생성하여 lotsArray 배열로 사용
+
+            for (let i = 0; lotsNewArray.length > 0; i += 1) {
+                const randomJebi = Math.floor(Math.random() * lotsNewArray.length);
+                jebiShuff = jebiShuff.concat(lotsNewArray.splice(randomJebi, 1));
+            }
+        }
+
+        const jebiShake = () => {
+            jebiShuff = []; // jebiShuff 배열 초기화
+            jebiMix(lots);
+            console.log(jebiShuff); // 섞인 배열 출력
+        };
+
+        const guideResult = () => {
+            guide.textContent = "뽑기 결과를 확인하세요";
+            $pPlus.disabled = 'disabled';
+            $pMinus.disabled = 'disabled';
+            $lPlus.disabled = 'disabled';
+            $lMinus.disabled = 'disabled';
+        }
+
+        $buttonShake.addEventListener('click', jebiShake);
+        $buttonShake.addEventListener('click', guideResult);
+
         $pPlus.addEventListener('click', pButton);
         $pMinus.addEventListener('click', pButton);
         $lPlus.addEventListener('click', lButton);
