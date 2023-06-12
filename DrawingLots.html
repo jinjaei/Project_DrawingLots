@@ -5,6 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>제비뽑기</title>
+    <style>
+        .ball{
+            display: inline-block;
+            position: absolute;
+            border: 1px solid black;
+            border-radius: 10px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            font-size: 15px;
+            margin-left: -74px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div style="display: inline-block;">인원수 </div>
@@ -16,7 +30,7 @@
     <button id="lMinus">-</button> &emsp;
     <div style="display: inline-block;" id="lotCount"> 1 </div>
     <p><div id="guide">버튼을 눌러 제비를 섞어 주세요</div></p>
-    <p><button id="buttonShake" style="position: relative;">제비 섞기</button></p>
+    <p><button id="progressButton" style="position: relative;">제비 섞기</button></p>
 
     <script>
         const $personCount = document.querySelector('#personCount');
@@ -25,27 +39,38 @@
         const $pMinus = document.querySelector('#pMinus');
         const $lPlus = document.querySelector('#lPlus');
         const $lMinus = document.querySelector('#lMinus');
+        const {body} = document; // 구조분해 할당
 
-        const $buttonShake = document.querySelector('#buttonShake');
-        const $guide=document.querySelector('guide');
+        const $progressButton = document.querySelector('#progressButton');
+        const $guide = document.querySelector('#guide');
         
-        for(i=0; i<5; i++){ // 최초에 제비 이미지 5개 생성
-            img = document.createElement('img');
-            img.src = "./제비.png";
-            img.width="100"; img.height="120";
-            document.body.appendChild(img);
+        for (i = 1; i <= 5; i++) { // 최초에 제비 이미지, 숫자 공 5개 생성
+            const $img = document.createElement('img');
+            $img.src = "./제비.png";
+            $img.width = "100"; $img.height = "120";
+
+            const $ball = document.createElement('span');
+            $ball.className = 'ball';
+            $ball.textContent = i;
+            $ball.style.visibility = "hidden";
+            body.append($img, $ball); // 제비 이미지, 숫자 공 추가
         }
         $lMinus.disabled = 'disabled';
 
         const lots = ['통과','통과','통과','통과','꽝']; // 기본 세팅 : 통과 제비 4개, 꽝 제비 1개
         let reset = false; // 꽝 제비 초기화를 위한 변수
 
-        const pButton = () => {
+        const pButton = () => { // 인원수 버튼 클릭시
             if(event.target.textContent === '+'){
-                img = document.createElement('img');
-                img.src = "./제비.png";
-                img.width="100"; img.height="120";
-                document.body.appendChild(img); // 제비 이미지 추가
+                const $img = document.createElement('img');
+                $img.src = "./제비.png";
+                $img.width = "100"; $img.height = "120";
+
+                const $ball = document.createElement('span');
+                $ball.className = 'ball';
+                $ball.textContent = lots.length + 1;
+                $ball.style.visibility = "hidden";
+                body.append($img, $ball);
 
                 reset = false;
                 $pMinus.disabled = false;
@@ -57,8 +82,10 @@
                 }
             }
             if(event.target.textContent === '-'){
-                var lotList = document.getElementsByTagName('img')
-                document.body.removeChild(lotList[0]); // 제비 이미지 제거
+                let lotList = document.getElementsByTagName('img')
+                let ballList = document.getElementsByTagName('span');
+                body.removeChild(lotList[lotList.length-1]); // 제비 이미지 제거
+                body.removeChild(ballList[ballList.length-1]);
 
                 $pPlus.disabled = false;
                 $personCount.textContent--;
@@ -114,32 +141,99 @@
         }
 
         let jebiShuff = [];
+        let numberBall;
 
         function jebiMix(lots) {
-            let lotsNewArray = lots.slice(); // lots 배열을 복사후 새롭게 배열 생성하여 lotsArray 배열로 사용
-
-            for (let i = 0; lotsNewArray.length > 0; i += 1) {
-                const randomJebi = Math.floor(Math.random() * lotsNewArray.length);
-                jebiShuff = jebiShuff.concat(lotsNewArray.splice(randomJebi, 1));
-            }
+            for (let i = 0; lots.length > 0; i += 1) {
+                const randomJebi = Math.floor(Math.random() * lots.length);
+                jebiShuff = jebiShuff.concat(lots.splice(randomJebi, 1));
+            }     
         }
 
         const jebiShake = () => {
             jebiShuff = []; // jebiShuff 배열 초기화
             jebiMix(lots);
+            console.log(lots);
             console.log(jebiShuff); // 섞인 배열 출력
+
+            $progressButton.disabled = 'disabled';
+            numberBall = setTimeout(() => { // 0.5초 후에 숫자 공을 표시 
+                for(i=0; i<jebiShuff.length; i++){
+                const $ballList = document.getElementsByTagName('span');
+                $ballList[i].style.visibility = "visible";
+                $progressButton.disabled = false;
+                }},500);
+
+            $progressButton.textContent = "결과 확인";
+            $progressButton.removeEventListener('click', jebiShake);
+            $progressButton.addEventListener('click', result);
         };
 
+        const result = () => {
+            const lotList = document.getElementsByTagName('img');
+            for (let i = 0; i < jebiShuff.length; i++) {
+                if (jebiShuff[i] === '꽝') {
+                    lotList[i].src = "./꽝.png";
+                }else{
+                    lotList[i].src = "./통과.png";
+                }
+            }
+            const $ballList = document.getElementsByTagName('span');
+            for(let i = $ballList.length - 1; i >= 0; i--){
+                body.removeChild($ballList[i]);
+            }
+
+            $guide.textContent = "다시 하기";
+            $progressButton.textContent = "다시 하기";
+            $progressButton.removeEventListener('click', result);
+            $progressButton.addEventListener('click', newgame);
+        }
+
+        const newgame = () => { // 결과를 초기화하고 처음 세팅으로 돌아감
+        const lotList = document.getElementsByTagName('img');
+        for (let i = lotList.length - 1; i >= 0; i--) {
+            body.removeChild(lotList[i]); // 기존 제비 이미지 제거
+        }
+        for (let i = 1; i <= 5; i++) { // 새로운 제비 이미지와 통과 제비 5개 추가
+            const $img = document.createElement('img');
+            $img.src = "./제비.png";
+            $img.width = "100"; $img.height = "120";
+
+            const $ball = document.createElement('span');
+            $ball.className = 'ball';
+            $ball.textContent = i;
+            $ball.style.visibility = "hidden";
+            body.append($img, $ball); // 제비 이미지, 숫자 공 추가
+
+            lots.unshift('통과');
+        }
+        lots.shift('통과'); // 통과 제비 4개가 있어야 하니까 -1
+        lots.push('꽝'); // 꽝 제비 하나 있어야 하니까 + 1
+
+        $guide.textContent = "버튼을 눌러 제비를 섞어 주세요";
+        $progressButton.textContent = "제비 섞기";
+        $progressButton.removeEventListener('click', newgame);
+        $progressButton.addEventListener('click', jebiShake);
+
+        reset = false; // 처음 시작할 때 reset은 false
+        $pPlus.disabled = false;
+        $pMinus.disabled = false;
+        $lPlus.disabled = false;
+        $personCount.textContent = 5;
+        $lotCount.textContent = 1;
+        console.log(lots);
+    }
+
         const guideResult = () => {
-            guide.textContent = "뽑기 결과를 확인하세요";
+            $guide.textContent = "뽑기 결과를 확인하세요";
             $pPlus.disabled = 'disabled';
             $pMinus.disabled = 'disabled';
             $lPlus.disabled = 'disabled';
             $lMinus.disabled = 'disabled';
         }
 
-        $buttonShake.addEventListener('click', jebiShake);
-        $buttonShake.addEventListener('click', guideResult);
+        $progressButton.addEventListener('click', jebiShake);
+        $progressButton.addEventListener('click', guideResult);
 
         $pPlus.addEventListener('click', pButton);
         $pMinus.addEventListener('click', pButton);
